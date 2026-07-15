@@ -17,3 +17,5 @@ app.get("/about", (req, res) => {
 });
 
 app.listen(3000);
+
+// git commit -m "feat: day 4 - add global logging middleware to log all incoming requests"

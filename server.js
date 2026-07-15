@@ -1,16 +1,21 @@
 const express = require("express");
 require("dotenv").config();
 
+const dns = require('dns');
+dns.setServers(['8.8.8.8', '8.8.4.4']);
+
+// Connect to MongoDB
+const connectDB = require("./src/config/db");   
+connectDB();                                     
+
 const app = express();
 const logger = require("./src/middleware/logger");
-// 1. Import your task routes (remember, no need to add .js)
 const taskRoutes = require("./src/routes/taskRoutes");
 
 // Middleware
 app.use(express.json());
-app.use(logger); // <--- This activates your logger!
+app.use(logger);
 
-// 2. Mount the task routes at the root "/" so they don't double up
 app.use("/", taskRoutes);
 
 const PORT = process.env.PORT || 3000;
