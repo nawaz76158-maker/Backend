@@ -1,6 +1,7 @@
 
 const Task = require("../models/Task");
 
+
 // GET /tasks
 const getAllTasks = async (req, res) => {
     try {
@@ -33,7 +34,16 @@ const createTask = async (req, res) => {
         if (!title) {
             return res.status(400).json({ message: "Title is required" });
         }
-    
+   
+        // validation here
+        const allowedPriorities = ["low", "medium", "high"];
+
+     if (priority && !allowedPriorities.includes(priority.toLowerCase())) {
+       return res.status(400).json({
+        message: "Priority must be low, medium, or high."
+       });
+      }
+        
         const newTask = await Task.create({ title, description, priority, dueDate });
 
         res.status(201).json({ message: "Task created successfully", data: newTask });
@@ -55,6 +65,18 @@ const updateTask = async (req, res) => {
         }
 
         const { title, description, priority, dueDate, completed } = req.body;
+
+        const allowedPriorities = ["low", "medium", "high"];
+
+        // Validation here
+      if (
+        priority &&
+       !allowedPriorities.includes(priority.toLowerCase())
+      ) {
+         return res.status(400).json({
+          message: "Priority must be low, medium, or high."
+        });
+     }
 
         if (title !== undefined) task.title = title;
         if (description !== undefined) task.description = description;
