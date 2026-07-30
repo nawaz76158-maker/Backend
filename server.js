@@ -11,12 +11,14 @@ connectDB();
 const app = express();
 const logger = require("./src/middleware/logger");
 const taskRoutes = require("./src/routes/taskRoutes");
+const userRoutes = require("./src/routes/userRoutes");
 
 // Middleware
 app.use(express.json());
 app.use(logger);
 
 app.use("/", taskRoutes);
+app.use("/auth", userRoutes);
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
