@@ -2,6 +2,9 @@ const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const User = require("../models/User");
 
+/**
+ * Handles user registration.
+ */
 const signup = async (req, res) => {
   try {
     const { name, email, password } = req.body;
@@ -51,64 +54,65 @@ const signup = async (req, res) => {
   }
 };
 
+/**
+ * Handles user authentication and JWT token generation.
+ */
 const login = async (req, res) => {
-try {
+  try {
     const { email, password } = req.body;
+
+    // 1. Validate input fields
     if (!email || !password) {
-    return res.status(400).json({
-        message: "Email and password are required"
-    });
-}
-
-const normalizedEmail = email.toLowerCase().trim();
-
-const user = await User.findOne({
-    email: normalizedEmail
-});
-
-if(!user){
-  return res.status(401).json({
-    message: "Invalid email or password"
-  })
-}
- 
-const isMatch = await bcrypt.compare(password, user.password);
-
-if (!isMatch) {
-    return res.status(401).json({
-        message: "Invalid email or password"
-    });
-}
-
-const token = jwt.sign(
-    {
-        userId: user._id
-    },
-    process.env.JWT_SECRET,
-    {
-        expiresIn: "1d"
+      return res.status(400).json({
+        message: "Email and password are required",
+      });
     }
-);
- return res.status(200).json({
-  message: "Login successful",
-  token,
-  data: {
-    id: user._id,
-    name: user.name,
-    email: user.email
+
+    // 2. Normalize email and find user
+    const normalizedEmail = email.toLowerCase().trim();
+    const user = await User.findOne({ email: normalizedEmail });
+
+    if (!user) {
+      return res.status(401).json({
+        message: "Invalid email or password",
+      });
+    }
+
+    // 3. Verify password match
+    const isMatch = await bcrypt.compare(password, user.password);
+
+    if (!isMatch) {
+      return res.status(401).json({
+        message: "Invalid email or password",
+      });
+    }
+
+    // 4. Generate JWT
+    const token = jwt.sign(
+      { userId: user._id },
+      process.env.JWT_SECRET,
+      { expiresIn: "1d" }
+    );
+
+    // 5. Send successful login response
+    return res.status(200).json({
+      message: "Login successful",
+      token,
+      data: {
+        id: user._id,
+        name: user.name,
+        email: user.email,
+      },
+    });
+  } catch (error) {
+    console.error("Login Error:", error);
+    return res.status(500).json({
+      message: "Error logging in",
+    });
   }
-});
-
-} catch (error) {
-  console.error(error);
-
-  res.status(500).json({
-    message: "Error logging in"
-  });
- }
 };
 
-module.exports = { 
+module.exports = {
   signup,
-   login 
+  login,
 };

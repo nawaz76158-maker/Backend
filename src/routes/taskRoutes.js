@@ -11,13 +11,11 @@ const {
     deleteTask
 } = require("../controllers/taskController");
 
-// Protected Route
+// Protected Routes
 router.get("/tasks", protect, getAllTasks);
-
-// Other Routes
-router.get("/tasks/:id", getTaskById);
-router.post("/tasks", createTask);
-router.put("/tasks/:id", updateTask);
-router.delete("/tasks/:id", deleteTask);
+router.get("/tasks/:id", protect, getTaskById);
+router.post("/tasks", protect, createTask);
+router.put("/tasks/:id", protect, updateTask);
+router.delete("/tasks/:id", protect, deleteTask);
 
 module.exports = router;

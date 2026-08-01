@@ -5,8 +5,8 @@ const Task = require("../models/Task");
 // GET /tasks
 const getAllTasks = async (req, res) => {
     try {
-        const tasks = await Task.find();
-        res.status(200).json(tasks);
+        const tasks = await Task.find({user: req.user.userId}); // Fetch tasks for the authenticated user
+         res.status(200).json(tasks);
     } catch (error) {
         res.status(500).json({ message: "Error fetching tasks" });
     }
@@ -15,7 +15,7 @@ const getAllTasks = async (req, res) => {
 // GET /tasks/:id
 const getTaskById = async (req, res) => {
     try {
-        const task = await Task.findById(req.params.id);
+        const task = await Task.findOne({ _id: req.params.id, user: req.user.userId }); // Fetch task by ID for the authenticated user
         
         if (!task) {
             return res.status(404).json({ message: "Task not found" });
@@ -30,7 +30,7 @@ const getTaskById = async (req, res) => {
 // POST /tasks
 const createTask = async (req, res) => {
     try {
-        const { title, description, priority, dueDate} = req.body;
+        const { title, description, priority, dueDate } = req.body;
         if (!title) {
             return res.status(400).json({ message: "Title is required" });
         }
@@ -44,7 +44,7 @@ const createTask = async (req, res) => {
        });
       }
         
-        const newTask = await Task.create({ title, description, priority, dueDate });
+        const newTask = await Task.create({ title, description, priority, dueDate, user: req.user.userId });
 
         res.status(201).json({ message: "Task created successfully", data: newTask });
           } catch (error) {
@@ -56,7 +56,7 @@ const createTask = async (req, res) => {
 // PUT /tasks/:id
 const updateTask = async (req, res) => {
     try {
-        const task = await Task.findById(req.params.id);
+        const task = await Task.findOne({ _id: req.params.id, user: req.user.userId }); // Fetch task by ID for the authenticated user
 
         if (!task) {
             return res.status(404).json({
@@ -101,7 +101,7 @@ const updateTask = async (req, res) => {
 // DELETE /tasks/:id
 const deleteTask = async (req, res) => {
     try {
-        const deletedTask = await Task.findByIdAndDelete(req.params.id);
+        const deletedTask = await Task.findOneAndDelete({ _id: req.params.id, user: req.user.userId }); // Fetch task by ID for the authenticated user
 
         if (!deletedTask) {
             return res.status(404).json({ message: "Task not found" });
