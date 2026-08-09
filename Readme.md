@@ -172,7 +172,7 @@ This project's patterns (auth, JWT, ownership-scoped access) are the foundation 
 
 ## More Projects
 
-**https://github.com/nawaz76158-maker**
+**https://github.com/mdnawaz-dev**
 
 ## Built By
 
