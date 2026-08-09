@@ -1,132 +1,49 @@
-# Backend Development
+# Task Manager API
 
-A backend development learning journey focused on understanding how servers, APIs, databases, authentication, authorization, and security work together to build real-world applications.
+A RESTful backend for managing tasks, built with Node.js, Express, and MongoDB. Built as a structured learning project — every feature was implemented, tested, and debugged with real understanding, not copy-pasted.
 
-As part of this journey, I built a **Task Manager API** using Node.js, Express.js, MongoDB, and Mongoose.
+## Features
 
----
+- **Authentication** — signup/login with JWT tokens and bcrypt password hashing
+- **Protected routes** — middleware verifies JWT and attaches the authenticated user to every request
+- **Full CRUD** — create, read, update, delete tasks via REST endpoints
+- **Ownership-scoped access** — users can only view, update, or delete their own tasks. Cross-user access attempts and missing-resource requests both return an identical `404`, by design, to avoid leaking which task IDs exist
+- **Input validation** — server-side validation on task fields (e.g. `priority` restricted to `low` / `medium` / `high`), because client-side validation alone can always be bypassed
+- **Partial updates** — `PUT` only modifies fields actually sent in the request body, instead of overwriting the full document
+- **Environment-based config** — secrets and DB connection string kept out of source control via `.env`
 
-## 📸 Project Preview
+## Tech Stack
 
-### Task Manager API
+- Node.js + Express
+- MongoDB Atlas + Mongoose
+- JWT (`jsonwebtoken`) for auth
+- bcrypt for password hashing
+- dotenv for environment config
 
-A RESTful backend API that allows users to create, read, update, and delete tasks while protecting routes using JWT authentication.
+## Architecture
 
-> Add your Task Manager screenshots here.
-
----
-
-## ✨ What I Learned
-
-During this backend journey, I learned and practiced:
-
-- Node.js fundamentals
-- npm and package management
-- Express.js
-- Creating HTTP servers
-- REST APIs
-- HTTP methods
-- Routing
-- Middleware
-- Request and response handling
-- Route parameters
-- Query parameters
-- JSON data
-- CRUD operations
-- MongoDB
-- MongoDB Atlas
-- Mongoose
-- Schemas and Models
-- Controllers
-- Environment variables
-- Error handling
-- Input validation
-- Authentication
-- Authorization
-- JWT (JSON Web Tokens)
-- Password hashing with bcrypt
-- Protected routes
-- User ownership of resources
-- API testing with Thunder Client / Postman
-- Git and GitHub
-
----
-
-# 🛠️ Technologies Used
-
-| Technology | Purpose |
-|---|---|
-| Node.js | JavaScript runtime |
-| Express.js | Backend framework |
-| MongoDB | NoSQL database |
-| MongoDB Atlas | Cloud database |
-| Mongoose | MongoDB ODM |
-| JWT | Authentication |
-| bcrypt | Password hashing |
-| dotenv | Environment variables |
-| Thunder Client | API testing |
-| Git & GitHub | Version control |
-
----
-
-# 🚀 Task Manager API
-
-The main project I built during this backend journey is a **Task Manager API**.
-
-The API allows authenticated users to manage their tasks and demonstrates how authentication, authorization, validation, database operations, and REST API design work together.
-
----
-
-## ✨ Features
-
-### 👤 User Authentication
-
-- User signup
-- User login
-- Password hashing using bcrypt
-- JWT token generation
-- JWT token verification
-- Protected routes
-
-### 🔐 Authorization
-
-- Users must provide a valid JWT token to access protected routes
-- Users can access their own tasks
-- Unauthorized requests are rejected
-
-### 📋 Task Management
-
-- Create a task
-- Get tasks
-- Get a task by ID
-- Update a task
-- Delete a task
-
-### ✅ Task Validation
-
-Tasks include fields such as:
-
-- Title
-- Description
-- Priority
-- Due date
-- Completed status
-
-Priority validation is implemented using:
-
-```text
-low
-medium
-high
+```
+Client
+  │
+  ▼
+Routes
+  │
+  ▼
+Middleware
+  │
+  ▼
+Controllers
+  │
+  ▼
+Models
+  │
+  ▼
+MongoDB
 ```
 
----
+## Authentication Flow
 
-# 🔑 Authentication Flow
-
-The authentication system works approximately like this:
-
-```text
+```
 User
  │
  ├── Signup
@@ -158,272 +75,105 @@ User
    Access Protected Routes
 ```
 
----
+## API Endpoints
 
-# 🛡️ Password Security
+### Auth
+| Method | Endpoint | Description |
+|---|---|---|
+| POST | `/auth/signup` | Register a new user |
+| POST | `/auth/login` | Log in, receive a JWT |
 
-Passwords are never stored as plain text.
+### Tasks (all require `Authorization: Bearer <token>`)
+| Method | Endpoint | Description |
+|---|---|---|
+| GET | `/tasks` | Get all tasks belonging to the logged-in user |
+| GET | `/tasks/:id` | Get a single task (must belong to the user) |
+| POST | `/tasks` | Create a new task |
+| PUT | `/tasks/:id` | Update a task (must belong to the user) |
+| DELETE | `/tasks/:id` | Delete a task (must belong to the user) |
 
-The password is hashed using **bcrypt** before being stored in the database.
+## Project Structure
 
-```javascript
-const hashedPassword = await bcrypt.hash(password, 10);
+```
+src/
+  config/       # DB connection
+  controllers/  # Route logic
+  middleware/   # Auth middleware, logging
+  models/       # Mongoose schemas (User, Task)
+  routes/       # Route definitions
+server.js       # Entry point
 ```
 
-During login, the entered password is compared with the stored hash:
+## Setup
 
-```javascript
-const isMatch = await bcrypt.compare(
-    password,
-    user.password
-);
+```bash
+git clone <repo-url>
+cd task-manager-api
+npm install
 ```
 
----
-
-# 🔐 JWT Authentication
-
-After successful login, a JWT token is generated.
-
-The client sends the token using the Authorization header:
-
-```text
-Authorization: Bearer <token>
+Create a `.env` file in the root:
+```
+MONGO_URI=your_mongodb_atlas_connection_string
+JWT_SECRET=your_secret_key
+PORT=3000
 ```
 
-The authentication middleware:
-
-1. Checks whether a token exists
-2. Extracts the token
-3. Verifies the token
-4. Identifies the user
-5. Allows access to the protected route
-
-If the token is missing or invalid, the request is rejected.
-
----
-
-# 🗄️ Database
-
-The project uses **MongoDB** with **Mongoose**.
-
-### User Model
-
-The User model contains:
-
-- Name
-- Email
-- Password
-- Created date
-- Updated date
-
-### Task Model
-
-The Task model contains:
-
-- Title
-- Description
-- Priority
-- Due date
-- Completed status
-- Timestamps
-
----
-
-# 🌐 API Structure
-
-## Authentication
-
-### Signup
-
-```text
-POST /auth/signup
+Run the server:
+```bash
+node server.js
 ```
 
-Creates a new user.
+## Security Notes
 
-### Login
+- Passwords are hashed with bcrypt (10 salt rounds) before storage — never stored in plain text.
+- JWT payload contains only the user ID, kept minimal since JWT payloads are readable (not encrypted) by anyone with the token.
+- Task ownership is enforced at the database query level (`Task.findOne({ _id, user: req.user.id })`), not with a separate manual check — this means a nonexistent task and a task belonging to another user both return the same `404`, which avoids leaking information about what exists.
 
-```text
-POST /auth/login
-```
+## API Testing
 
-Authenticates the user and returns a JWT token.
-
----
-
-## Tasks
-
-### Get All Tasks
-
-```text
-GET /tasks
-```
-
-### Get Task by ID
-
-```text
-GET /tasks/:id
-```
-
-### Create Task
-
-```text
-POST /tasks
-```
-
-### Update Task
-
-```text
-PUT /tasks/:id
-```
-
-### Delete Task
-
-```text
-DELETE /tasks/:id
-```
-
-Protected routes require a valid JWT token.
-
----
-
-# 🧩 Backend Architecture
-
-The project follows a structured backend approach:
-
-```text
-Client
-  │
-  ▼
-Routes
-  │
-  ▼
-Middleware
-  │
-  ▼
-Controllers
-  │
-  ▼
-Models
-  │
-  ▼
-MongoDB
-```
-
-This separation makes the application easier to understand, maintain, and extend.
-
----
-
-# 🧪 API Testing
-
-I tested the API using **Thunder Client / Postman**.
-
-Some of the authentication tests included:
+Tested manually with Thunder Client, covering both success and failure paths:
 
 - Signup with valid data
-- Signup with an existing email
+- Signup with an already-registered email
 - Login with correct password
 - Login with incorrect password
-- Access protected route without a token
-- Access protected route with a valid token
-- Access protected route with an invalid token
-- Create tasks
-- Update tasks
-- Delete tasks
-- Validate task priority
+- Access a protected route with no token
+- Access a protected route with a valid token
+- Access a protected route with an invalid/expired token
+- Create, update, and delete tasks
+- Attempt to update/delete another user's task (correctly blocked)
+- Task priority validation (rejects values outside `low` / `medium` / `high`)
 
----
+## What I Learned
 
-# 📚 Backend Concepts Practiced
+This project went beyond following code examples — it required understanding how the pieces fit together as one system:
 
-## Stage 1 — Backend Fundamentals
+- How a client communicates with a server, and how Express routes requests to controllers
+- How middleware can intercept and protect routes before a controller ever runs
+- How Mongoose models map to MongoDB collections, and why `.save()` (not just reassigning a field) is what persists a change
+- Why passwords must be hashed, never stored in plain text
+- How JWTs authenticate stateless requests, and why the payload is readable but not writable without the secret
+- Why server-side input validation matters even when the frontend already validates
+- How to design database queries so that access control is enforced by the query itself, not a separate manual check
 
-- Node.js
-- npm
-- Express.js
-- HTTP methods
-- Routes
-- Middleware
-- Request and response objects
-
-## Stage 2 — Database
-
-- MongoDB
-- MongoDB Atlas
-- Mongoose
-- Schemas
-- Models
-- CRUD operations
-
-## Stage 3 — Authentication & Security
-
-- Authentication
-- Authorization
-- JWT
-- bcrypt
-- Password hashing
-- Protected routes
-- Middleware-based authentication
-- Input validation
-
-## Stage 4 — Project
-
-Built a complete **Task Manager API** combining the concepts learned throughout the backend journey.
-
----
-
-# 📌 What I Learned From This Project
-
-This project helped me understand how a backend application works beyond individual code examples.
-
-I learned how:
-
-- A client communicates with a server
-- Express handles API requests
-- Routes connect requests to controllers
-- Middleware can protect routes
-- Controllers handle application logic
-- Mongoose communicates with MongoDB
-- Passwords should be securely hashed
-- JWT can be used for authentication
-- APIs should validate user input
-- Different backend components work together as one system
-
----
-
-# 🎯 Future Improvements
-
-Possible improvements for the Task Manager API:
+## Future Improvements
 
 - Refresh token authentication
 - Role-based authorization
-- Pagination
-- Search and filtering
-- Sorting tasks
-- Better centralized error handling
-- API documentation
+- Pagination, search, and filtering
+- Centralized error handling
 - Automated testing
-- Deployment
 - Frontend integration
 
----
+## What's Next
 
-## 🔗 More Projects
+This project's patterns (auth, JWT, ownership-scoped access) are the foundation for **HealTech**, a role-based healthcare records app currently in progress — extending single-owner access control into a multi-role, care-team-based permission system.
 
-Check out my other work:
+## More Projects
 
 **https://github.com/nawaz76158-maker**
 
----
+## Built By
 
-## 👤 Built By
-
-**Mohammad Nawaz**
-
-BCA Student  
-Ballari, Karnataka
-
----
-
-*Built as part of my Backend Development learning journey.*
+**Mohammad Nawaz** — BCA Student, Ballari, Karnataka
